@@ -231,15 +231,24 @@ class NodeSSH extends OriginNodeSSH {
     // SSH 部署模式
     for (const sshConfig of ssh_configs) {
       const ssh = new this(deployConfig);
+      let lastSSH;
       try {
-        const lastSSH = await ssh.connect2(sshConfig);
+        lastSSH = await ssh.connect2(sshConfig);
         console.log('ssh connected');
 
         await lastSSH.upload();
-        ssh.dispose();
       } catch (err) {
         console.error(err);
         process.exit(1);
+      } finally {
+        // 静默处理连接关闭时可能触发的 ECONNRESET 错误（远端主动断开属正常行为）
+        if (ssh.connection) {
+          ssh.connection.on('error', () => {});
+        }
+        if (lastSSH && lastSSH !== ssh && lastSSH.connection) {
+          lastSSH.connection.on('error', () => {});
+        }
+        ssh.dispose();
       }
     }
   }
