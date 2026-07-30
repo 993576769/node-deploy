@@ -44,6 +44,7 @@ module.exports = {
   ossTimeout,                                          // （选填）上传 oss 的超时时间, 默认: '600s'
   ossNamespace,                                        // （选填）oss 上传文件夹，默认: 'frontend'
   ossPattern,                                          // （选填）需要上传oss的文件，默认: `${path.resolve('dist')}/**/*.!(html)`
+  releaseName,                                         // （选填）OSS 发布清单名称，也兼容 release_name
 
   // 腾讯云COS相关配置
   cosSecretId,                                         // cos SecretId
@@ -78,6 +79,8 @@ module.exports = {
   ]
 }
 ```
+
+阿里云 OSS 会为每次上传写入发布清单，并保留最近 `versionsRetainedNumber` 次发布仍然引用的文件。只有文件不再被任何保留清单引用时才会删除，因此可安全处理 Nuxt/Vite 生成的 hash-only chunk。首次启用发布清单时会将 namespace 内的现存对象纳入基线，并先积累完整的保留窗口，再开始清理旧文件。
 
 #### Glob 语法说明
 
@@ -255,6 +258,8 @@ DeployToOss.deploy({
   ossNamespace: OSS_ASSETS_NAMESPACE,   // 选填，默认 'frontend'
   ossPattern: `${path.resolve('dist')}/**/*.!(html)`,   // 选填，规则参考 https://www.npmjs.com/package/glob
   ossTimeout: '600s',                  // 选填
+  releaseName: dayjs().format('YYYY-MM-DD_HH_mm_ss'),  // 选填，也兼容 release_name
+  versionsRetainedNumber: 5,           // 选填，默认保留 1 次发布
 });
 ```
 
